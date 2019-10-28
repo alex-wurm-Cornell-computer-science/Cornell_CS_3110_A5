@@ -86,7 +86,11 @@ module Make
         else None
 
     let to_list d =
-      failwith "Unimplemented"
+      let rec to_list_helper acc d = 
+        match d with
+        | Leaf -> acc
+        | Node (_,w,l,r) -> List.rev (to_list_helper (List.rev (w :: (to_list_helper acc l))) r)
+      in to_list_helper [] d
 
     let rec fold f acc d =
       match d with

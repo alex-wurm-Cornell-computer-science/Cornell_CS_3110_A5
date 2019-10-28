@@ -1,14 +1,16 @@
 open Dictionary
 
-(** [format_assoc_list fmt_key fmt_val fmt lst] formats an association 
-    list [lst] as a dictionary.  The [fmt_key] and [fmt_val] arguments
-    are formatters for the key and value types, respectively.  The
+(** [format_elt_list fmt_key fmt lst] formats an element 
+    list [lst] as a dictionary. The [fmt_key] argument
+    is a formatter for the key type. The
     [fmt] argument is where to put the formatted output. *)
-let format_assoc_list format_key format_val fmt lst =
+(*BISECT-IGNORE-BEGIN*)
+let format_tree_list format_key format_val fmt lst =
   Format.fprintf fmt "[";
-  List.iter (fun (k,v) -> Format.fprintf fmt "%a -> %a;"
+  List.iter (fun (k,v) -> Format.fprintf fmt "%a -> %a; "
                 format_key k format_val v) lst;
   Format.fprintf fmt "]"
+(*BISECT-IGNORE-END*)
 
 module Make
   = functor (K : KeySig) -> functor (V : ValueSig) ->
@@ -99,7 +101,7 @@ module Make
       let rec to_list_helper acc d = 
         match d with
         | Leaf -> acc
-        | Node (_,w,l,r) -> List.rev (to_list_helper (List.rev (w :: (to_list_helper acc l))) r)
+        | Node (_,w,l,r) -> (to_list_helper ((w :: (to_list_helper acc r))) l)
       in to_list_helper [] d
 
     let rec fold f acc d =
@@ -108,6 +110,6 @@ module Make
       | Node (_,(k,v),l,r)  -> f k v (fold f (fold f acc l) r)
 
     let format fmt d =
-      format_assoc_list Key.format Value.format fmt d
+      d |> to_list |> format_tree_list Key.format Value.format fmt
 
   end

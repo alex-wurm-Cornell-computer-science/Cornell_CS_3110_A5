@@ -23,26 +23,40 @@ module Make
     (* TODO: change type [t] from [unit] to something involving
        red-black trees. *)
     (* AF: TODO: document the abstraction function.
-     * RI: TODO: document any representation invariants. *)
+     * RI: 
+       - No Red node may have a Red child. 
+       - All branches of the tree must have the same number of Black nodes. 
+       - No branch of the tree can have a depth of at least two times 
+          greater than that of any other branch. 
+       - The left child of any node must have a key that is less than that of
+          its parent node. 
+       - The right child of any node must have a key that is greater than 
+          that of its parent node. *)
     type color = Red | Black 
 
     type t = 
       | Leaf 
       | Node of color * (key*value) * t * t
 
+    let rec fold_tree f acc d = 
+      match d with
+      | Leaf -> acc
+      | Node (_,v,l,r)  -> f v (fold_tree f acc l) (fold_tree f acc r)
+
+    let max_depth d =
+      fold_tree (fun _ l r -> 1 + max l r) 0 d
+
+    let min_depth d =
+      fold_tree (fun _ l r -> 1 + min l r) 0 d
+
     let rep_ok d =
-      failwith "Unimplemented"
+      if (max_depth d) > (min_depth d) then d else failwith "u suck alex"
 
     let empty = 
       Leaf (* TODO: replace [()] with a value of your rep type [t]. *)
 
     let is_empty d =
       d = Leaf
-
-    let rec fold_tree f acc d = 
-      match d with
-      | Leaf -> acc
-      | Node (_,v,l,r)  -> f v (fold_tree f acc l) (fold_tree f acc r)
 
     let size d =
       fold_tree (fun _ l r -> 1 + l + r) 0 d 

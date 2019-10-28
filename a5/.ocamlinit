@@ -1,0 +1,9 @@
+#directory "_build";;
+#require "str";;
+#require "qcheck";;
+#require "csv";;
+#load_rec "listDictionary.cmo";;
+#load_rec "treeDictionary.cmo";;
+#load_rec "dictionarySet.cmo";;
+#load_rec "listEngine.cmo";;
+#load_rec "treeEngine.cmo";;

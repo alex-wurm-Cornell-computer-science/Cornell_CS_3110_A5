@@ -1,5 +1,15 @@
 open Dictionary
 
+(** [format_assoc_list fmt_key fmt_val fmt lst] formats an association 
+    list [lst] as a dictionary.  The [fmt_key] and [fmt_val] arguments
+    are formatters for the key and value types, respectively.  The
+    [fmt] argument is where to put the formatted output. *)
+let format_assoc_list format_key format_val fmt lst =
+  Format.fprintf fmt "[";
+  List.iter (fun (k,v) -> Format.fprintf fmt "%a -> %a;"
+                format_key k format_val v) lst;
+  Format.fprintf fmt "]"
+
 module Make
   = functor (K : KeySig) -> functor (V : ValueSig) ->
   struct
@@ -98,6 +108,6 @@ module Make
       | Node (_,(k,v),l,r)  -> f k v (fold f (fold f acc l) r)
 
     let format fmt d =
-      Format.fprintf fmt "<unimplemented>"
+      format_assoc_list Key.format Value.format fmt d
 
   end

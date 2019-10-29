@@ -1,7 +1,7 @@
 open Dictionary
 
-(** [format_elt_list fmt_key fmt lst] formats an element 
-    list [lst] as a dictionary. The [fmt_key] argument
+(** [format_tree_list fmt_key fmt_val fmt lst] formats an element 
+    list [lst] as a treedictionary. The [fmt_key] argument
     is a formatter for the key type. The
     [fmt] argument is where to put the formatted output. *)
 (*BISECT-IGNORE-BEGIN*)

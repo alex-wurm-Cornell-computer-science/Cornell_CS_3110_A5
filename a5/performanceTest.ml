@@ -1,5 +1,9 @@
 (* All the code in this file is provided just to help you.
    You can change it or ignore it as you see fit. *)
+open Dictionary
+open ListDictionary
+open DictionarySet
+open TreeDictionary
 
 (** [i -- j] is the list of integers from [i] to [j], inclusive.
     Tail recursive. *)
@@ -26,3 +30,4 @@ let time (f : unit -> unit) : float =
   let t = Unix.gettimeofday () in
   ignore (f ());
   Unix.gettimeofday () -. t 
+

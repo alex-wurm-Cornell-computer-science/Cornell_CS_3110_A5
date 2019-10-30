@@ -222,5 +222,4 @@ type Elt.t = IntKey.t) -> struct
       (time_tests randomlist900k T.empty);
       Printf.printf "1000000,%f,%f\n" (time_tests sortedlist1M T.empty)
       (time_tests randomlist1M T.empty);
-
 end

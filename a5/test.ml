@@ -276,8 +276,6 @@ module S = DictionarySet.Make(String)(ListDictionary.Make)
 module D = ListDictionary.Make(String)(DictionarySet.Make(String)(ListDictionary.Make))
 module E = Engine.Make(S)(D)
 
-
-
 let make_engine_words
     (name : string)
     (idx : E.idx)
@@ -329,10 +327,73 @@ let engine_tests = [
   make_and_not "and not 2: testing on preamble" preamble_idx preamble_ors preamble_nots_2 ["prefix.txt";"whole.txt"];
 ]
 
+module IntIntTreeDictionary = TreeDictionary.Make(Int)(Int);;
+
+let make_tree_is_empty
+    (name : string)
+    (d : IntIntTreeDictionary.t) 
+    (expected_output : bool): test =
+  name >:: (fun _ ->
+      assert_equal expected_output (IntIntTreeDictionary.is_empty d))
+
+let make_rep_ok
+    (name : string)
+    (d : IntIntTreeDictionary.t)
+    (expected_output : IntIntTreeDictionary.t) : test =
+  name >:: (fun _ ->
+      assert_equal expected_output (IntIntTreeDictionary.rep_ok d ))
+
+let make_tree_insert
+    (name : string)
+    (k : int)
+    (v : int)
+    (d : IntIntTreeDictionary.t)
+    (expected_output : IntIntTreeDictionary.t) : test =
+  name >:: (fun _ ->
+      assert_equal expected_output (IntIntTreeDictionary.insert k v d))
+
+let make_tree_find
+    (name : string)
+    (k : int)
+    (d : IntIntTreeDictionary.t)
+    (expected_output : int option) : test =
+  name >:: (fun _ ->
+      assert_equal expected_output (IntIntTreeDictionary.find k d))
+
+let make_tree_member
+    (name : string)
+    (k : int)
+    (d : IntIntTreeDictionary.t) 
+    (expected_output : bool) : test =
+  name >:: (fun _ ->
+      assert_equal expected_output (IntIntTreeDictionary.member k d))
+
+let make_tree_choose
+    (name : string)
+    (d : IntIntTreeDictionary.t)
+    (expected_output : (IntIntTreeDictionary.key * IntIntTreeDictionary.value) option) : test =
+  name >:: (fun _ -> 
+      assert_equal expected_output (IntIntTreeDictionary.choose d))
+
+
+let empty_tree = IntIntTreeDictionary.empty
+let one_node = IntIntTreeDictionary.insert 1 0 empty_tree
+
+let tree_tests = [
+  make_tree_is_empty "checking empty tree" empty_tree true;
+  make_rep_ok "checking RI for empty tree" empty_tree empty_tree;
+
+  make_tree_is_empty "checking that one node tree isn't empty" one_node false;
+  make_tree_insert "checking insert of one node" 1 0 empty_tree one_node;
+  make_rep_ok "checking RI for one node tree" one_node one_node;
+
+]
+
 let suite = "search test suite" >::: List.flatten [ 
     list_dictionary_tests;
     dictionary_set_tests;
     engine_tests;
+    tree_tests;
   ]
 
 let _ = run_test_tt_main suite

@@ -50,11 +50,8 @@ module Make : DictionaryMaker
       List.length d
 
     let insert k v d =
-      let exists = List.mem_assoc k d in
-
-      if exists then let trim_dict = List.remove_assoc k d in 
-        (k,v) :: trim_dict 
-      else (k,v) :: d
+      let trim_dict = List.remove_assoc k d in 
+      (k,v) :: trim_dict 
 
     let remove k d =
       let exists = List.mem_assoc k d in

@@ -125,101 +125,106 @@ let sortedlist900k = rnd_sort_list 900000
 
 let sortedlist1M = rnd_sort_list 1000000
 
-module ListDictTest = functor (LD : DictionarySet.Set with 
-type Elt.t = IntKey.t) -> struct
+module TreeDictTest = TreeDictionary.Make(IntKey)(IntKey)
 
-  module L = DictionarySet.Make(IntKey)(ListDictionary.Make)
-  type t = L.t
+module T = DictionarySet.Make(IntKey)(TreeDictionary.Make)
 
-   let rec insert_all l d =
-    match l with
-    | [] -> d
-    | h::t -> let d' = L.insert h d in 
-              insert_all t d'
+let rec insert_list lst acc =
+  match lst with
+  | [] -> acc
+  | h::t -> insert_list t (T.insert h acc)
 
-    let rec test4 l d =
-      match l with
-      | [] -> ()
-      | h::t -> ignore(L.member h d);
-                ignore(L.member h d);
-                ignore(L.member h d);
-                ignore(L.member h d);
-                ignore(test4 t d)
+let rec list_mem_test_tree lst d =
+  match lst with
+  | [] -> false
+  | h::t -> (T.member h d) && list_mem_test_tree t d
 
-    let time_tests l d =
-      let timed_run = fun () -> d |> insert_all l |> test4 l in
-      time timed_run
+let rec four_times lst d i = 
+  if i = 0 then true
+  else list_mem_test_tree lst d && four_times lst d (i-1)
 
-    let run_data =
-      Printf.printf "n,List-Asc,List-Rnd\n";
-      Printf.printf "10000,%f,%f\n" (time_tests sortedlist10k L.empty)
-      (time_tests randomlist10k L.empty);
-      Printf.printf "20000,%f,%f\n" (time_tests sortedlist20k L.empty)
-      (time_tests randomlist20k L.empty);
-      Printf.printf "30000,%f,%f\n" (time_tests sortedlist30k L.empty)
-      (time_tests randomlist30k L.empty);
-      Printf.printf "40000,%f,%f\n" (time_tests sortedlist40k L.empty)
-      (time_tests randomlist40k L.empty);
-      Printf.printf "50000,%f,%f\n" (time_tests sortedlist50k L.empty)
-      (time_tests randomlist50k L.empty);
-      Printf.printf "60000,%f,%f\n" (time_tests sortedlist60k L.empty)
-      (time_tests randomlist60k L.empty);
-      Printf.printf "70000,%f,%f\n" (time_tests sortedlist70k L.empty)
-      (time_tests randomlist70k L.empty);
-      Printf.printf "80000,%f,%f\n" (time_tests sortedlist80k L.empty)
-      (time_tests randomlist80k L.empty);
-      Printf.printf "90000,%f,%f\n" (time_tests sortedlist90k L.empty)
-      (time_tests randomlist90k L.empty);
-      Printf.printf "100000,%f,%f\n" (time_tests sortedlist100k L.empty)
-      (time_tests randomlist100k L.empty);
+let test_insert_tree lst i = 
+  let d = insert_list lst T.empty in
+  four_times lst d i
 
-end
+module L = DictionarySet.Make(IntKey)(ListDictionary.Make)
 
-module TreeDictTest = functor (TD : DictionarySet.Set with
-type Elt.t = IntKey.t) -> struct
+let rec insert_list_list lst acc =
+  match lst with
+  | [] -> acc
+  | h::t -> insert_list_list t (L.insert h acc)
 
-  module T =  DictionarySet.Make(IntKey)(TreeDictionary.Make)
-  type t = T.t
+let rec list_mem_test_list lst d =
+  match lst with
+  | [] -> false
+  | h::t -> (L.member h d) && list_mem_test_list t d
 
-  let rec insert_all l d =
-    match l with
-    | [] -> d
-    | h::t -> let d' = T.insert h d in 
-              insert_all t d'
+let rec four_times_list lst d i = 
+  if i = 0 then true
+  else list_mem_test_list lst d && four_times_list lst d (i-1)
 
-  let rec test4 l d =
-    match l with
-    | [] -> ()
-    | h::t -> ignore(T.member h d);
-              ignore(T.member h d);
-              ignore(T.member h d);
-              ignore(T.member h d);
-              ignore(test4 t d)
+let test_insert_list lst i = 
+  let d = insert_list_list lst L.empty in
+  four_times_list lst d i
 
-  let time_tests l d =
-    let timed_run = fun () -> d |> insert_all l |> test4 l in
-    time timed_run
 
-  let run_data =
-      Printf.printf "n,List-Asc,List-Rnd\n";
-      Printf.printf "100000,%f,%f\n" (time_tests sortedlist100k T.empty)
-      (time_tests randomlist100k T.empty);
-      Printf.printf "200000,%f,%f\n" (time_tests sortedlist200k T.empty)
-      (time_tests randomlist200k T.empty);
-      Printf.printf "300000,%f,%f\n" (time_tests sortedlist300k T.empty)
-      (time_tests randomlist300k T.empty);
-      Printf.printf "400000,%f,%f\n" (time_tests sortedlist400k T.empty)
-      (time_tests randomlist400k T.empty);
-      Printf.printf "500000,%f,%f\n" (time_tests sortedlist500k T.empty)
-      (time_tests randomlist500k T.empty);
-      Printf.printf "600000,%f,%f\n" (time_tests sortedlist600k T.empty)
-      (time_tests randomlist600k T.empty);
-      Printf.printf "700000,%f,%f\n" (time_tests sortedlist700k T.empty)
-      (time_tests randomlist700k T.empty);
-      Printf.printf "800000,%f,%f\n" (time_tests sortedlist800k T.empty)
-      (time_tests randomlist800k T.empty);
-      Printf.printf "900000,%f,%f\n" (time_tests sortedlist900k T.empty)
-      (time_tests randomlist900k T.empty);
-      Printf.printf "1000000,%f,%f\n" (time_tests sortedlist1M T.empty)
-      (time_tests randomlist1M T.empty);
-end
+
+(* random list *)
+let _ = print_endline ("LIST DICTIONARY - RANDOM LISTS")
+let _ = time (fun()->(ignore(test_insert_list (rnd_list 1000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_list (rnd_list 2000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_list (rnd_list 3000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_list (rnd_list 4000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_list (rnd_list 5000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_list (rnd_list 6000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_list (rnd_list 7000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_list (rnd_list 8000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_list (rnd_list 9000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_list (rnd_list 10000) 4))) |> string_of_float |> print_endline
+let _ = print_endline ("END OF LIST DICTIONARY - RANDOM LISTS")
+
+(* sorted list *)
+let _ = print_endline ("LIST DICTIONARY - SORTED LISTS")
+let _ = time (fun()->(ignore(test_insert_list (rnd_sort_list 1000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_list (rnd_sort_list 2000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_list (rnd_sort_list 3000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_list (rnd_sort_list 4000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_list (rnd_sort_list 5000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_list (rnd_sort_list 6000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_list (rnd_sort_list 7000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_list (rnd_sort_list 8000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_list (rnd_sort_list 9000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_list (rnd_sort_list 10000) 4))) |> string_of_float |> print_endline
+let _ = print_endline ("END OF LIST DICTIONARY - SORTED LISTS")
+
+
+
+
+
+(* random tree list *)
+let _ = print_endline ("TREE DICTIONARY - RANDOM LISTS")
+let _ = time (fun()->(ignore(test_insert_tree (rnd_list 100000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_tree (rnd_list 200000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_tree (rnd_list 300000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_tree (rnd_list 400000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_tree (rnd_list 500000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_tree (rnd_list 600000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_tree (rnd_list 700000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_tree (rnd_list 800000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_tree (rnd_list 900000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_tree (rnd_list 1000000) 4))) |> string_of_float |> print_endline
+let _ = print_endline ("END OF TREE DICTIONARY - RANDOM LISTS")
+
+(* sorted tree list *)
+let _ = print_endline ("TREE DICTIONARY - SORTED LISTS")
+let _ = time (fun()->(ignore(test_insert_tree (rnd_sort_list 100000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_tree (rnd_sort_list 200000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_tree (rnd_sort_list 300000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_tree (rnd_sort_list 400000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_tree (rnd_sort_list 500000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_tree (rnd_sort_list 600000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_tree (rnd_sort_list 700000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_tree (rnd_sort_list 800000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_tree (rnd_sort_list 900000) 4))) |> string_of_float |> print_endline
+let _ = time (fun()->(ignore(test_insert_tree (rnd_sort_list 1000000) 4))) |> string_of_float |> print_endline
+let _ = print_endline ("END OF TREE DICTIONARY - SORTED LISTS")

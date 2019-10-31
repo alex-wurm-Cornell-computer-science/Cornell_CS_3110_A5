@@ -33,7 +33,7 @@ module Make
        - The right child of any node must have a key that is greater than 
           that of its parent node. *)
     exception NotOkay
-   
+
     type color = Red | Black 
 
     type t = 
@@ -52,63 +52,65 @@ module Make
       fold_tree (fun _ l r -> 1 + min l r) 0 d
 
     (* Checks: 1) tree is balanced meaning max_depth <= 2 * min_depth
-    2) checks that BST invariant is maintained (the left child of a node always
-    has a value less than the node and the right child of a node always has
-    a value greater than the node.
-    3) checks that red nodes do not have red children
-    4) checks that all branches have the same number of black nodes*)
+       2) checks that BST invariant is maintained (the left child of a node always
+       has a value less than the node and the right child of a node always has
+       a value greater than the node.
+       3) checks that red nodes do not have red children
+       4) checks that all branches have the same number of black nodes*)
     let rec is_bst d =
       match d with 
       | Leaf -> false
       | Node (_,v,l,r) ->  match (l,r) with
-                          | (Leaf,Leaf) -> true
-                          | (Leaf, Node (_,x,_,_)) -> is_bst r && x > v
-                          | (Node (_,y,_,_)), Leaf -> is_bst l && y < v
-                          | (Node (_,a,_,_), Node (_,b,_,_)) -> 
-                              is_bst l && is_bst r && a < v && b > v
+        | (Leaf,Leaf) -> true
+        | (Leaf, Node (_,x,_,_)) -> is_bst r && x > v
+        | (Node (_,y,_,_)), Leaf -> is_bst l && y < v
+        | (Node (_,a,_,_), Node (_,b,_,_)) -> 
+          is_bst l && is_bst r && a < v && b > v
 
     let rec no_double_reds d =
       match d with
       | Leaf -> false
       | Node (Red,_,l,r) -> (match (l,r) with 
-                            | (Leaf,Leaf) -> true
-                            | (Leaf, Node (Red,_,_,_)) -> false
-                            | (Node (Red,_,_,_), Leaf) -> false
-                            | (Node (Red,_,_,_), Node (Red,_,_,_)) -> false
-                            | (Node (Red,_,_,_), Node (Black,_,_,_)) -> false
-                            | (Node (Black,_,_,_), Node (Red,_,_,_)) -> false
-                            | (Node (Black,_,_,_), Leaf) -> no_double_reds l
-                            | (Leaf, Node (Black,_,_,_)) -> no_double_reds r
-                            | Node (Black,_,_,_), Node (Black,_,_,_) ->
-                              no_double_reds l && no_double_reds r
-                            )
+          | (Leaf,Leaf) -> true
+          | (Leaf, Node (Red,_,_,_)) -> false
+          | (Node (Red,_,_,_), Leaf) -> false
+          | (Node (Red,_,_,_), Node (Red,_,_,_)) -> false
+          | (Node (Red,_,_,_), Node (Black,_,_,_)) -> false
+          | (Node (Black,_,_,_), Node (Red,_,_,_)) -> false
+          | (Node (Black,_,_,_), Leaf) -> no_double_reds l
+          | (Leaf, Node (Black,_,_,_)) -> no_double_reds r
+          | Node (Black,_,_,_), Node (Black,_,_,_) ->
+            no_double_reds l && no_double_reds r
+        )
       | Node (Black,_,l,r) -> (match (l,r) with
-                              | (Leaf,Leaf) -> true
-                              | (Node (_,_,_,_), Leaf) -> no_double_reds l
-                              | (Leaf, Node (_,_,_,_)) -> no_double_reds r
-                              | (Node (_,_,_,_), Node (_,_,_,_)) -> 
-                                no_double_reds l && no_double_reds r
-                              )
+          | (Leaf,Leaf) -> true
+          | (Node (_,_,_,_), Leaf) -> no_double_reds l
+          | (Leaf, Node (_,_,_,_)) -> no_double_reds r
+          | (Node (_,_,_,_), Node (_,_,_,_)) -> 
+            no_double_reds l && no_double_reds r
+        )
 
     let rec same_black_lengths d = 
       match d with
       | Leaf -> 0
       | Node (c,_,l,r) -> (match (same_black_lengths l, same_black_lengths r) with
-                          | (x,y) -> if x = y && c = Black then x + 1
-                                     else if x = y && c = Red then x
-                                     else raise NotOkay
-                          )
+          | (x,y) -> if x = y && c = Black then x + 1
+            else if x = y && c = Red then x
+            else raise NotOkay
+        )
 
     let rep_ok d =
-      if (max_depth d) > 2 * (min_depth d) 
-        then  failwith "tree is not balanced"
-      else if not (is_bst d) 
+      if d = Leaf then d else (
+        if (max_depth d) > 2 * (min_depth d) 
+        then failwith "tree is not balanced"
+        else if not (is_bst d)
         then failwith "not a BST" 
-      else if not (no_double_reds d) 
+        else if not (no_double_reds d) 
         then failwith "RB invariant #1 violated"
-      else match same_black_lengths d with
-                  | x -> d
-                  | exception NotOkay -> failwith "RB invariant #2 violated"
+        else match same_black_lengths d with
+          | x -> d
+          | exception NotOkay -> failwith "RB invariant #2 violated"
+      )
 
     let empty = 
       Leaf (* TODO: replace [()] with a value of your rep type [t]. *)
@@ -128,15 +130,16 @@ module Make
         Node (Red, y, Node (Black, x, a, b), Node (Black, z, c, d))
       | a, b, c, d -> Node (a, b, c, d)
 
+    let rec ins k v d = 
+      match d with 
+      | Leaf -> Node (Red, (k,v), Leaf, Leaf)
+      | Node (c,w,l,r) as d -> 
+        if (Key.compare k (fst w) = LT) then balance_tree (c, w, ins k v l, r)
+        else if (Key.compare k (fst w) = GT) then balance_tree (c, w, l, ins k v r)
+        else d
+
     let insert k v d =
-      let rec ins d = 
-        match d with 
-        | Leaf -> Node (Red, (k,v), Leaf, Leaf)
-        | Node (c,w,l,r) as d -> 
-          if (k < fst w) then balance_tree (c, w, ins l, r)
-          else if (k > fst w) then balance_tree (c, w, l, ins r)
-          else d in 
-      match ins d with 
+      match ins k v d with 
       | Node (_,w,l,r) -> Node (Black, w, l, r)
       | Leaf -> failwith "RBT insert failed with ins returning leaf"
 

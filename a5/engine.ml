@@ -26,9 +26,6 @@ module Make =
       let index_of_dir d =
 
         let valid_file_name = Str.regexp "^.*\\.txt$" in
-        (* let valid_preword = Str.regexp "\\S+" in
-           let valid_word = Str.regexp "[A-Za-z0-9(\\S*?)[A-Za-z0-9]|[A-Za-z0-9]" in  *)
-        (* let whitespace = Str.regexp "\\s+" in  *)
         let boundary_character = Str.regexp "[A-Za-z0-9]" in 
 
 

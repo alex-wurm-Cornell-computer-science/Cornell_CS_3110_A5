@@ -20,8 +20,6 @@ module Make
     type key = K.t
     type value = V.t
 
-    (* TODO: change type [t] from [unit] to something involving
-       red-black trees. *)
     (* AF: TODO: document the abstraction function.
      * RI: 
        - No Red node may have a Red child. 
@@ -51,7 +49,8 @@ module Make
     let min_depth d =
       fold_tree (fun _ l r -> 1 + min l r) 0 d
 
-    (* Checks: 1) tree is balanced meaning max_depth <= 2 * min_depth
+    (* Checks: 
+       1) tree is balanced meaning max_depth <= 2 * min_depth
        2) checks that BST invariant is maintained (the left child of a node always
        has a value less than the node and the right child of a node always has
        a value greater than the node.

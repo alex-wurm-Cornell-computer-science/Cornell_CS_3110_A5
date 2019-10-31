@@ -1,6 +1,6 @@
 (**
    Metadata about this submission.
-   @author TODO All author names and NetIDs. 
+   @author Caitlin Stanton (cs968), Alex Wurm (aew98). 
 *)
 
 (** [hours_worked] is a list of the number of hours each team member

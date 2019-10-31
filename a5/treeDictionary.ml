@@ -134,9 +134,10 @@ module Make
       match d with 
       | Leaf -> Node (Red, (k,v), Leaf, Leaf)
       | Node (c,w,l,r) as d -> 
-        if (Key.compare k (fst w) = LT) then balance_tree (c, w, ins k v l, r)
-        else if (Key.compare k (fst w) = GT) then balance_tree (c, w, l, ins k v r)
-        else d
+        let comparison = Key.compare k (fst w) in
+        if comparison = EQ then d 
+        else if comparison = LT then balance_tree (c, w, ins k v l, r)
+        else balance_tree (c, w, l, ins k v r)
 
     let insert k v d =
       match ins k v d with 

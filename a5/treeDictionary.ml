@@ -20,7 +20,18 @@ module Make
     type key = K.t
     type value = V.t
 
-    (* AF: TODO: document the abstraction function.
+    (* AF:  Tree Dictionary [(c1,v1,l1,r1); ... ; (cn,vn,ln,rn)] represents a 
+       tree of interconnected nodes, b1...bn. Each node has a color, a value, a left
+       child node, and a right child node. A tree can be visualized as such:
+                                     b1
+                                    /   \
+                                  b2    b3
+                                 / \    / \
+                                b4 b5 b6  b7
+                                    . . .
+       The empty Tree Dictionary is a Leaf (i.e. a node with no children nodes and 
+       no value).
+
      * RI: 
        - No Red node may have a Red child. 
        - All branches of the tree must have the same number of Black nodes. 
@@ -30,9 +41,9 @@ module Make
           its parent node. 
        - The right child of any node must have a key that is greater than 
           that of its parent node. *)
-    
+
     (* [Exception NotOkay] is thrown if the representation invariant is
-    violated; for use when checking rep_ok. *)
+       violated; for use when checking rep_ok. *)
     exception NotOkay
 
     type color = Red | Black 
@@ -42,27 +53,27 @@ module Make
       | Node of color * (key*value) * t * t
 
     (* [fold_tree f acc d] is the result of recursively applying function [f]
-    to a [TreeDictionary] by traversing the tree from root to leaves. *)
+       to a [TreeDictionary] by traversing the tree from root to leaves. *)
     let rec fold_tree f acc d = 
       match d with
       | Leaf -> acc
       | Node (_,v,l,r)  -> f v (fold_tree f acc l) (fold_tree f acc r)
 
     (* [max_depth d] is the depth of the longest branch of 
-    [TreeDictionary d].*)
+       [TreeDictionary d].*)
     let max_depth d =
       fold_tree (fun _ l r -> 1 + max l r) 0 d
 
     (* [min_depth d] is the depth of the shortest branch of 
-    [TreeDictionary d].*)
+       [TreeDictionary d].*)
     let min_depth d =
       fold_tree (fun _ l r -> 1 + min l r) 0 d
 
     (* [is_bst d] is the boolean value of the statement '[d] is a valid 
-    Binary Search Tree'. The function checks that for each node in the 
-    [TreeDictionary d], the value of the left child is less than the value
-    of the node, and the value of the right child is greater than the value
-    of the node. *)
+       Binary Search Tree'. The function checks that for each node in the 
+       [TreeDictionary d], the value of the left child is less than the value
+       of the node, and the value of the right child is greater than the value
+       of the node. *)
     let rec is_bst d =
       match d with 
       | Leaf -> false
@@ -74,11 +85,11 @@ module Make
           is_bst l && is_bst r && a < v && b > v
 
     (* [no_double_reds d] is the boolean value of the statement 'd satisfies
-    the first representation invariant for red-black trees that no red node 
-    has a red child.' The function recursively traverses the tree from the 
-    root to the leaves and immediately returns false if it encounters any
-    red node with a red child, or else returns true if it does not encounter
-    any such nodes. *)
+       the first representation invariant for red-black trees that no red node 
+       has a red child.' The function recursively traverses the tree from the 
+       root to the leaves and immediately returns false if it encounters any
+       red node with a red child, or else returns true if it does not encounter
+       any such nodes. *)
     let rec no_double_reds d =
       match d with
       | Leaf -> false
@@ -103,12 +114,12 @@ module Make
         )
 
     (* [same_black_lengths d] is the boolean value of the statement 'd satisfies
-    the second representation invariant for red-black trees that all branches in
-    the tree must have the same number of black nodes.' The function recursively
-    traverses the tree from the root to the leaves and checks that both children 
-    of each node have the same length, immediately raising the exception
-    NotOkay if any two sub-branches are encounter with different numbers
-    of black nodes. *)
+       the second representation invariant for red-black trees that all branches in
+       the tree must have the same number of black nodes.' The function recursively
+       traverses the tree from the root to the leaves and checks that both children 
+       of each node have the same length, immediately raising the exception
+       NotOkay if any two sub-branches are encounter with different numbers
+       of black nodes. *)
     let rec same_black_lengths d = 
       match d with
       | Leaf -> 0
@@ -120,16 +131,16 @@ module Make
 
 
     (* [rep_ok d] is the [TreeDictionary] d if d satisfies the 4 representation
-    invariants of a red-black balanced BST which are:
+       invariants of a red-black balanced BST which are:
        1) the tree is balanced meaning max_depth <= 2 * min_depth
        2) the BST invariant is maintained (the left child of a node always
        has a value less than the node and the right child of a node always has
        a value greater than the node.
        3) red nodes do not have red children
        4) all branches have the same number of black nodes
-      If any of the representation invariants are not satisfied, [rep_ok d]
-      is a failure message identifying which invariant was violated. *)
-      
+       If any of the representation invariants are not satisfied, [rep_ok d]
+       is a failure message identifying which invariant was violated. *)
+
     let rep_ok d =
       if d = Leaf then d else (
         if (max_depth d) > 2 * (min_depth d) 

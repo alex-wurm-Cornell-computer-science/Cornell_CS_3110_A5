@@ -329,6 +329,13 @@ let engine_tests = [
 
 module IntIntTreeDictionary = TreeDictionary.Make(Int)(Int);;
 
+let make_rep_ok
+    (name : string)
+    (d : IntIntTreeDictionary.t)
+    (expected_output : IntIntTreeDictionary.t) : test =
+  name >:: (fun _ ->
+      assert_equal expected_output (IntIntTreeDictionary.rep_ok d ))
+
 let make_tree_is_empty
     (name : string)
     (d : IntIntTreeDictionary.t) 
@@ -336,12 +343,12 @@ let make_tree_is_empty
   name >:: (fun _ ->
       assert_equal expected_output (IntIntTreeDictionary.is_empty d))
 
-let make_rep_ok
+let make_tree_size
     (name : string)
     (d : IntIntTreeDictionary.t)
-    (expected_output : IntIntTreeDictionary.t) : test =
+    (expected_output : int): test = 
   name >:: (fun _ ->
-      assert_equal expected_output (IntIntTreeDictionary.rep_ok d ))
+      assert_equal expected_output (IntIntTreeDictionary.size d))
 
 let make_tree_insert
     (name : string)
@@ -375,18 +382,57 @@ let make_tree_choose
   name >:: (fun _ -> 
       assert_equal expected_output (IntIntTreeDictionary.choose d))
 
+let make_tree_fold
+    (name : string)
+    (func : (IntIntTreeDictionary.key -> IntIntTreeDictionary.value -> 'acc -> 'acc))
+    (init : int)
+    (dict : IntIntTreeDictionary.t)
+    (expected_output : int): test =
+  name >:: (fun _ ->
+      assert_equal expected_output (IntIntTreeDictionary.fold func init dict))
 
-let empty_tree = IntIntTreeDictionary.empty
-let one_node = IntIntTreeDictionary.insert 1 0 empty_tree
+let t_empty = IntIntTreeDictionary.empty
+let t_add_1 = IntIntTreeDictionary.insert 1 1 t_empty
+let t_choose_1 = (1,1)
+let t_add_2a = IntIntTreeDictionary.insert 6 2 t_add_1
+let t_choose_2a = (6,2)
+let t_add_2b = IntIntTreeDictionary.insert 12 3 t_add_2a
+let t_add_existing = IntIntTreeDictionary.insert 6 7 t_add_2b
 
 let tree_tests = [
-  make_tree_is_empty "checking empty tree" empty_tree true;
-  make_rep_ok "checking RI for empty tree" empty_tree empty_tree;
+  make_tree_is_empty "is_empty: created empty tree" t_empty true;
+  make_tree_size "size: created empty tree" t_empty 0;
+  make_tree_choose "choose: created empty tree" t_empty None;
+  make_rep_ok "checking RI for empty tree" t_empty t_empty;
 
-  make_tree_is_empty "checking that one node tree isn't empty" one_node false;
-  make_tree_insert "checking insert of one node" 1 0 empty_tree one_node;
-  make_rep_ok "checking RI for one node tree" one_node one_node;
+  make_tree_insert "insert: added one node" 1 1 t_empty t_add_1;
+  make_tree_is_empty "is_empty: added one node" t_add_1 false;
+  make_tree_size "size: added one node" t_add_1 1;
+  (* make_tree_choose "choose: from tree with one node" t_add_1 (Some t_choose_1); *)
+  make_tree_fold "fold: sum of tree with one node" (fun k v acc -> k*2 + v*3 + acc) 0 t_add_1 5;
+  make_rep_ok "rep_ok: added one node" t_add_1 t_add_1;
 
+  make_tree_insert "insert: added a second node" 6 2 t_add_1 t_add_2a;
+  make_tree_is_empty "is_empty:  added a second node" t_add_2a false;
+  make_tree_size "size: added a second node" t_add_2a 2;
+  (* make_tree_choose "choose: added a second node" t_add_2a (Some t_choose_2a); *)
+  make_tree_fold "fold: sum of dict with two nodes" (fun k v acc -> k*2 + v*3 + acc) 0 t_add_2a 23;
+  make_rep_ok "rep_ok: added a second node" t_add_2a t_add_2a;
+
+  make_tree_insert "insert: added a third node" 12 3 t_add_2a t_add_2b;
+  make_tree_is_empty "is_empty: added a third node" t_add_2b false;
+  make_tree_size "size: added a third node" t_add_2b 3;
+  make_tree_find "find: added a third node" 12 t_add_2b (Some 3);
+  make_tree_member "member: added a third node" 12 t_add_2b true;
+  make_rep_ok "rep_ok: added one node" t_add_2b t_add_2b;
+
+  make_tree_find "find: looking for nonexisting element" 10 t_add_2b None;
+  make_tree_member "member: looking for nonexisting element" 10 t_add_2b false;
+  make_tree_fold "fold: sum of tree with three nodes" (fun k v acc -> k*2 + v*3 + acc) 0 t_add_2b 56;
+  make_tree_insert "insert: adding node with existing key" 6 7 t_add_2b t_add_existing;
+  make_tree_insert "insert: adding node with existing key" 6 7 t_add_2b t_add_2b;
+  make_tree_is_empty "is_empty: added a third node" t_add_existing false;
+  make_tree_size "size: added a third node" t_add_existing 3;
 ]
 
 let suite = "search test suite" >::: List.flatten [ 
